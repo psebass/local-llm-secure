@@ -13,7 +13,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # IMPORTANTE:
 # Fijar una versión/tag concreto evita construir siempre
 # contra el HEAD cambiante del repositorio.
-ARG LLAMA_CPP_TAG=b8000
+ARG LLAMA_CPP_TAG=b11193
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -75,14 +75,13 @@ COPY --from=builder \
 # Bibliotecas GGML/llama.cpp generadas durante el build.
 RUN mkdir -p /app/lib
 
-COPY --from=builder \
-    /opt/llama.cpp/build \
-    /tmp/llama-build
+# Runtime libraries
+COPY --from=builder /opt/llama.cpp/build /tmp/llama-build
 
 RUN find /tmp/llama-build \
-        -type f \
-        \( -name "*.so" -o -name "*.so.*" \) \
-        -exec cp -P {} /app/lib/ \; && \
+        \( -type f -o -type l \) \
+        -name "*.so*" \
+        -exec cp -a {} /app/lib/ \; && \
     rm -rf /tmp/llama-build
 
 ENV LD_LIBRARY_PATH=/app/lib
